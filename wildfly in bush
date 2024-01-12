@@ -1,0 +1,31 @@
+!#/bin/bash
+#Fully working script for install and config wildfly service. 
+#tested on AMS server. 09.18.2023
+yum install java-1.8.0-openjdk-devel
+java -version
+cd /opt
+wget http://download.jboss.org/wildfly/14.0.1.Final/wildfly-14.0.1.Final.tar.gz
+tar -xvf wildfly-14.0.1.Final.tar.gz
+mv /opt/wildfly-14.0.1.Final /opt/wildfly
+cp /opt/wildfly/docs/contrib/scripts/init.d/wildfly.conf /etc/default/ 
+echo JAVA_HOME="/usr/lib/jvm/default-java" >> /etc/default/wildfly.conf 
+echo JBOSS_HOME="/opt/wildfly"  >> /etc/default/wildfly.conf 
+echo JBOSS_USER=wildfly >> /etc/default/wildfly.conf 
+echo JBOSS_MODE=standalone  >> /etc/default/wildfly.conf 
+echo JBOSS_CONFIG=standalone.xml  >> /etc/default/wildfly.conf 
+echo JBOSS_DOMAIN_CONFIG=domain.xml  >> /etc/default/wildfly.conf 
+echo JBOSS_HOST_CONFIG=host-master.xml >> /etc/default/wildfly.conf 
+echo STARTUP_WAIT=60  >> /etc/default/wildfly.conf 
+echo SHUTDOWN_WAIT=60  >> /etc/default/wildfly.conf 
+echo JBOSS_CONSOLE_LOG="/var/log/wildfly/console.log" >> /etc/default/wildfly.conf 
+echo JBOSS_OPTS="--admin-only -b 127.0.0.1" >> /etc/default/wildfly.conf 
+cd /etc/init.d/
+cp /opt/wildfly/docs/contrib/scripts/init.d/wildfly-init-redhat.sh /etc/init.d/
+mv wildfly-init-redhat.sh wildfly
+chkconfig — add wildfly
+chkconfig wildfly on
+mkdir -p /var/log/wildfly
+sed -i 's%<inet-address value="${jboss.bind.address:127.0.0.1}"/>%<inet-address value="${jboss.bind.address:0.0.0.0}"/>%g' /opt/wildfly/standalone/configuration/standalone.xml
+adduser -r wildfly
+chown -R wildfly:wildfly /opt/wildfly/
+service wildfly start
